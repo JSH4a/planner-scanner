@@ -77,6 +77,7 @@
             buildInputs = with pkgs; [
               flutter
               android-studio
+              google-chrome
             ] ++ [
               pinnedJDK
               #androidEnvCustomPackage.androidsdk
@@ -96,6 +97,7 @@
             GRADLE_USER_HOME = "/home/specx/.gradle";
             #GRADLE_HOME = "/home/specx/gradle-home";
             GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${androidCustomPackage}/share/android-sdk/build-tools/34.0.0/aapt2";
+            CHROME_EXECUTABLE = "${pkgs.google-chrome}/bin/google-chrome-stable";
           };
         };
       }
