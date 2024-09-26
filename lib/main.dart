@@ -1,11 +1,13 @@
-import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demopro/components/plan.dart';
-import 'package:demopro/model/JsonPlan/json_plan.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:http/src/response.dart';
+import 'package:location/location.dart';
 
+import 'firebase_options.dart';
 import 'service/planning_permission_api.dart';
+
 
 const Color primaryColor = Color(0xFF0A74DA); // Custom blue color
 const Color primaryVariantColor = Color(0xFF075BB5); // A darker shade
@@ -15,21 +17,19 @@ final ThemeData appTheme = ThemeData(
   scaffoldBackgroundColor: const Color(0xFF0D1B2A),
   // Dark blue background
   primaryColor: const Color(0xFF1B263B),
-  // Dark blue primary color
-  backgroundColor: const Color(0xFF0D1B2A),
   // Same as scaffold background
 
   // Text Styles
   textTheme: const TextTheme(
-    headline1: TextStyle(
+    displayLarge: TextStyle(
         color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-    headline2: TextStyle(
+    displayMedium: TextStyle(
         color: Colors.white, fontSize: 28, fontWeight: FontWeight.w600),
-    bodyText1: TextStyle(color: Colors.white, fontSize: 16),
-    bodyText2: TextStyle(color: Colors.white70, fontSize: 14),
+    bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
+    bodyMedium: TextStyle(color: Colors.white70, fontSize: 14),
     // Slightly lighter white
-    subtitle1: TextStyle(color: Colors.white, fontSize: 18),
-    subtitle2: TextStyle(color: Colors.white70, fontSize: 16),
+    titleMedium: TextStyle(color: Colors.white, fontSize: 18),
+    titleSmall: TextStyle(color: Colors.white70, fontSize: 16),
   ),
 
   // Icon Theme
@@ -53,8 +53,8 @@ final ThemeData appTheme = ThemeData(
   // Elevated Buttons
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      primary: const Color(0xFF415A77), // Lighter blue for buttons
-      onPrimary: Colors.white, // White text on buttons
+      foregroundColor: Colors.white,
+      backgroundColor: const Color(0xFF415A77), // White text on buttons
     ),
   ),
 
@@ -97,7 +97,10 @@ final ThemeData appTheme = ThemeData(
   ),
 );
 
-void main() {
+Future<void> main() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -126,7 +129,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
-    const ProfileScreen(),
+    ProfileScreen(),
     HomeScreen(),
     const SettingsScreen(),
   ];
@@ -169,8 +172,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: FutureBuilder<Response>(
-        future: api.searchPlanningData(), // Call the API
+      child: FutureBuilder<Iterable<Plan>>(
+        future: api.getPlansNearLocation(), // Call the API
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             // Loading state
@@ -182,23 +185,10 @@ class HomeScreen extends StatelessWidget {
             // No data state
             return const Center(child: Text('No data found'));
           } else {
-            // Success: display data
-            var utf8Body = utf8.decode(snapshot.data!.bodyBytes);
-            var myMap = jsonDecode(utf8Body) as List<dynamic>;
-            var jsonPlans = myMap.map((e) => JsonPlan.fromJson(e));
-            print(jsonPlans.first.address);
-            var rows = jsonPlans.map((e) => Plan(
-                  address: e.address ?? "No address",
-                  reference: e.refval!,
-                  status: e.dcstat!,
-                  dataReceived: e.dateactcom?.toString() ?? "No date",
-                  proposal: e.proposal!,
-                ));
-
             return ListView(
               children: [
                 Column(
-                  children: [...rows],
+                  children: [...snapshot.data!],
                 )
               ],
             );
@@ -212,10 +202,22 @@ class HomeScreen extends StatelessWidget {
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
+  Future<void> getPlan(String chunkId) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Reference to the specific document
+    DocumentSnapshot<Map<String, dynamic>> documentSnapshot = await firestore
+        .collection('planning_applications')
+        .doc('3803-3761')
+        .get();
+
+    print(documentSnapshot.data()!["address"]);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Profile Screen'),
+    return Center(
+      child: FutureBuilder(future: getPlan("3803-3761"), builder: (context, snapshot) => const Text("Hello"),),
     );
   }
 }
@@ -225,8 +227,15 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text("Hi"),
+    return Center(
+      child: FutureBuilder(
+          future: Location().getLocation(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Text("No Location yet!");
+            }
+            return Text(snapshot.data.toString());
+          }),
     );
   }
 }
