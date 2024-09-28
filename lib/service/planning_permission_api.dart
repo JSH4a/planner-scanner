@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:demopro/service/location_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
@@ -31,7 +32,7 @@ class PlanningPermissionApi {
     return degrees * pi / 180;
   }
 
-  Future<Iterable<Plan>> getPlansNearLocation() async {
+  Future<Iterable<PlanningApplication>> getPlansNearLocation() async {
     // Define headers
     Map<String, String> headers = {
       'User-Agent':
@@ -99,7 +100,7 @@ class PlanningPermissionApi {
       print(jsonPlans.length);
       print(filteredLocationPlans.length);
 
-      var rows = filteredLocationPlans.map((e) => Plan(
+      var rows = filteredLocationPlans.map((e) => PlanningApplication(
             address: e.address ?? "No address",
             reference: e.refval!,
             status: e.dcstat!,

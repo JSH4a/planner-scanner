@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demopro/components/plan.dart';
+import 'package:demopro/screens/scan_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 
@@ -129,7 +128,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
-    ProfileScreen(),
+    const ScanScreen(),
     HomeScreen(),
     const SettingsScreen(),
   ];
@@ -147,8 +146,8 @@ class _MyHomePageState extends State<MyHomePage> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Search',
+            icon: Icon(Icons.radar),
+            label: 'Scan',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -172,7 +171,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: FutureBuilder<Iterable<Plan>>(
+      child: FutureBuilder<Iterable<PlanningApplication>>(
         future: api.getPlansNearLocation(), // Call the API
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -195,29 +194,6 @@ class HomeScreen extends StatelessWidget {
           }
         },
       ),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  Future<void> getPlan(String chunkId) async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    // Reference to the specific document
-    DocumentSnapshot<Map<String, dynamic>> documentSnapshot = await firestore
-        .collection('planning_applications')
-        .doc('3803-3761')
-        .get();
-
-    print(documentSnapshot.data()!["address"]);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: FutureBuilder(future: getPlan("3803-3761"), builder: (context, snapshot) => const Text("Hello"),),
     );
   }
 }

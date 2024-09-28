@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class Plan extends StatelessWidget {
+class PlanningApplication extends StatelessWidget {
   final String address;
   final String reference;
   final String status;
   final String dataReceived;
   final String proposal;
 
-  Plan({
+  PlanningApplication({
     super.key,
     required String address,
     required String reference,
